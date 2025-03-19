@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Emoji Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen">
+        <h1>Emoji Game</h1>
+        <div class="login-container">
+            <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="10">
+            <button id="join-button">Join Game</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <div class="game-info">
+            <span>You: <span id="player-emoji"></span> <span id="player-nickname"></span></span>
+        </div>
+        <div id="game-grid"></div>
+        <div class="controls-info">
+            <p>Use WASD keys to move</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html> 
