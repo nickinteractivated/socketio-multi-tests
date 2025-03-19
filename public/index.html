@@ -12,6 +12,18 @@
         <div class="login-container">
             <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="10">
             <button id="join-button">Join Game</button>
+            
+            <div class="room-controls">
+                <p>- or -</p>
+                <button id="create-game-button">Create Private Game</button>
+                <div id="join-url-container" class="hidden">
+                    <p>Share this link with friends:</p>
+                    <div class="url-display">
+                        <input type="text" id="game-url" readonly>
+                        <button id="copy-url-button">Copy</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -22,13 +34,63 @@
             </div>
             <button id="logout-button">Logout</button>
         </div>
-        <div class="players-list">
-            <h3>Players Online</h3>
-            <div id="players-list-content"></div>
-        </div>
-        <div id="game-grid"></div>
-        <div class="controls-info">
-            <p>Use WASD keys to move</p>
+        
+        <div class="game-dashboard">
+            <div class="side-panel">
+                <div class="stats-panel">
+                    <h3>Your Stats</h3>
+                    <div class="stat-item">
+                        <span>Total Score:</span> 
+                        <span id="total-score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Total Strawberries:</span> 
+                        <span id="total-strawberries">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Golden Strawberries:</span> 
+                        <span id="total-golden">0</span>
+                    </div>
+                </div>
+                
+                <div class="hourly-competition">
+                    <h3>Hourly Competition</h3>
+                    <div class="competition-info">
+                        <p>Time left: <span id="time-left">59:59</span></p>
+                        <p>Current leader: <span id="current-leader">None</span></p>
+                    </div>
+                </div>
+                
+                <div class="leaderboard">
+                    <h3>Global Leaderboard</h3>
+                    <div id="leaderboard-content"></div>
+                </div>
+                
+                <div class="challenge-container">
+                    <h3>Challenge Friends</h3>
+                    <button id="challenge-button">Create Challenge</button>
+                    <div id="challenge-url-container" class="hidden">
+                        <p>Share this link:</p>
+                        <div class="url-display">
+                            <input type="text" id="challenge-url" readonly>
+                            <button id="copy-challenge-button">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-panel">
+                <div class="players-list">
+                    <h3>Players Online</h3>
+                    <div id="players-list-content"></div>
+                </div>
+                
+                <div id="game-grid"></div>
+                
+                <div class="controls-info">
+                    <p>Use WASD keys to move</p>
+                </div>
+            </div>
         </div>
     </div>
 
