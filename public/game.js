@@ -16,8 +16,6 @@ const playersListContent = document.getElementById('players-list-content');
 let players = {};
 let myPlayerId = null;
 let strawberries = [];
-let pendingMoves = {}; // For client-side prediction
-let moveIdCounter = 0; // For tracking move requests
 
 // Check for existing session
 const savedNickname = localStorage.getItem('gameNickname');
@@ -101,50 +99,6 @@ function updatePlayersList() {
     });
 }
 
-// Apply client-side movement prediction
-function applyClientMovement(direction) {
-    if (!players[myPlayerId]) return;
-    
-    const player = players[myPlayerId];
-    const oldX = player.x;
-    const oldY = player.y;
-    let newX = oldX;
-    let newY = oldY;
-    
-    // Predict new position
-    switch (direction) {
-        case 'W':
-            if (newY > 0) newY -= 1;
-            break;
-        case 'A':
-            if (newX > 0) newX -= 1;
-            break;
-        case 'S':
-            if (newY < 15) newY += 1;
-            break;
-        case 'D':
-            if (newX < 15) newX += 1;
-            break;
-    }
-    
-    // If position changed, update locally first
-    if (newX !== oldX || newY !== oldY) {
-        // Generate moveId for this movement
-        const moveId = ++moveIdCounter;
-        
-        // Save old position in case we need to rollback
-        pendingMoves[moveId] = { x: oldX, y: oldY };
-        
-        // Update local position
-        player.x = newX;
-        player.y = newY;
-        updatePlayerPosition(player);
-        
-        // Send to server with the moveId
-        socket.emit('move', { direction, moveId });
-    }
-}
-
 // Handle join button click
 joinButton.addEventListener('click', () => {
     const nickname = nicknameInput.value.trim();
@@ -169,7 +123,6 @@ logoutButton.addEventListener('click', () => {
     players = {};
     myPlayerId = null;
     strawberries = [];
-    pendingMoves = {};
     
     // Disconnect and reconnect socket
     socket.disconnect();
@@ -182,8 +135,7 @@ document.addEventListener('keydown', (e) => {
     
     const key = e.key.toUpperCase();
     if (['W', 'A', 'S', 'D'].includes(key)) {
-        // Apply movement immediately for responsive feel
-        applyClientMovement(key);
+        socket.emit('move', key);
     }
 });
 
@@ -219,13 +171,6 @@ socket.on('playerJoined', (player) => {
 });
 
 socket.on('playerMoved', (data) => {
-    // Handle server response to our movement
-    if (data.id === myPlayerId && data.moveId) {
-        // Remove from pending moves since server confirmed it
-        delete pendingMoves[data.moveId];
-    }
-    
-    // Update other players (or confirm our own movement)
     if (players[data.id]) {
         players[data.id].x = data.x;
         players[data.id].y = data.y;
@@ -239,9 +184,24 @@ socket.on('strawberrySpawned', (strawberry) => {
 });
 
 socket.on('strawberryCollected', (data) => {
-    // Remove collected strawberry
-    strawberries = strawberries.filter(s => s.id !== data.strawberryId);
-    renderStrawberries();
+    // Find strawberry element and animate it before removing
+    const strawberryElement = document.getElementById(`strawberry-${data.strawberryId}`);
+    if (strawberryElement) {
+        // Add collection animation class
+        strawberryElement.classList.add('strawberry-collected');
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            // Remove from list
+            strawberries = strawberries.filter(s => s.id !== data.strawberryId);
+            // Re-render all strawberries
+            renderStrawberries();
+        }, 500); // Animation duration
+    } else {
+        // Fallback if element not found
+        strawberries = strawberries.filter(s => s.id !== data.strawberryId);
+        renderStrawberries();
+    }
     
     // Update player score
     if (players[data.playerId]) {

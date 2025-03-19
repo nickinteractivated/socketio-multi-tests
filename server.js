@@ -117,12 +117,12 @@ io.on('connection', (socket) => {
     });
     
     // Handle player movement
-    socket.on('move', (data) => {
+    socket.on('move', (direction) => {
         const player = players[socket.id];
         if (!player) return;
         
         // Update position based on direction
-        switch (data.direction) {
+        switch (direction) {
             case 'W':
                 if (player.y > 0) player.y -= 1;
                 break;
@@ -144,8 +144,7 @@ io.on('connection', (socket) => {
         io.emit('playerMoved', {
             id: socket.id,
             x: player.x,
-            y: player.y,
-            moveId: data.moveId // Send back the move ID for client-side prediction
+            y: player.y
         });
     });
     
