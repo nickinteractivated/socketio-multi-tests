@@ -16,8 +16,15 @@
     </div>
 
     <div id="game-screen" class="hidden">
-        <div class="game-info">
-            <span>You: <span id="player-emoji"></span> <span id="player-nickname"></span></span>
+        <div class="game-header">
+            <div class="game-info">
+                <span>You: <span id="player-emoji"></span> <span id="player-nickname"></span></span>
+            </div>
+            <button id="logout-button">Logout</button>
+        </div>
+        <div class="players-list">
+            <h3>Players Online</h3>
+            <div id="players-list-content"></div>
         </div>
         <div id="game-grid"></div>
         <div class="controls-info">
