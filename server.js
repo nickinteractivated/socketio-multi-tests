@@ -16,6 +16,11 @@ app.get('/play/:roomId', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Constants
+const emojis = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜'];
+const GRID_SIZE = 16;
+const MAX_STRAWBERRIES = 5;
+
 // Game state
 const rooms = {
     'main': {
@@ -24,9 +29,6 @@ const rooms = {
         goldenStrawberryTimer: null
     }
 };
-
-// Initialize main room
-initializeRoom('main');
 
 // Stats tracking
 const playerStats = {}; // Stores lifetime stats for players
@@ -38,9 +40,8 @@ const hourlyCompetition = {
     previousWinner: null
 };
 
-const emojis = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜'];
-const GRID_SIZE = 16;
-const MAX_STRAWBERRIES = 5;
+// Initialize main room
+initializeRoom('main');
 
 // Initialize a room
 function initializeRoom(roomId) {
