@@ -118,6 +118,42 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
                     ctx.lineWidth = 1;
                     ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
+                    // Draw tree if present
+                    if (tile.hasTree) {
+                        // Draw tree trunk (brown rectangle)
+                        ctx.fillStyle = '#6b4226'; // Tree trunk brown
+                        ctx.fillRect(
+                            x * tileSize + tileSize / 2 - 2, 
+                            y * tileSize + tileSize / 2, 
+                            4, 
+                            tileSize / 2 - 2
+                        );
+                        
+                        // Draw tree foliage (green circle)
+                        ctx.fillStyle = '#1d4120'; // Dark green for leaves
+                        ctx.beginPath();
+                        ctx.arc(
+                            x * tileSize + tileSize / 2,
+                            y * tileSize + tileSize / 3,
+                            tileSize / 3, // Radius
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                        
+                        // Add some lighter green highlights
+                        ctx.fillStyle = '#2a5a2a'; // Lighter green
+                        ctx.beginPath();
+                        ctx.arc(
+                            x * tileSize + tileSize / 2 - 2,
+                            y * tileSize + tileSize / 3 - 2,
+                            tileSize / 5, // Smaller radius
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                    }
+
                     // Draw resource if present
                     if (tile.resource) {
                         let resourceColor;

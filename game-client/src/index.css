@@ -63,8 +63,11 @@ button:focus-visible {
 
 .flex {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    /* background-color: #16213e; */
+    /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); */
 }
 
 /* .game-map-container {
@@ -77,3 +80,238 @@ button:focus-visible {
   height: 100%;
   border: 1px solid #ccc;
 } */
+
+.regeneration-announcement {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  z-index: 1000;
+  text-align: center;
+  animation: fadeInOut 5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid #6bd5e1;
+}
+
+.regeneration-announcement p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 18px;
+  color: #6bd5e1;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+/* Tree movement blocked message */
+.movement-blocked-message {
+  position: fixed;
+  top: 120px; /* Positioned below the regeneration message */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(139, 0, 0, 0.8); /* Dark red background */
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid #ff6b6b;
+}
+
+.movement-blocked-message p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 16px;
+  color: #ffcccc;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Data restored message */
+.data-restored-message {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 100, 0, 0.8); /* Dark green background */
+  color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  z-index: 1000;
+  text-align: center;
+  animation: fadeInOut 5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid #4ade80;
+}
+
+.data-restored-message p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 18px;
+  color: #4ade80;
+}
+
+/* Input container styles */
+.input-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+/* Update login button to have transitions */
+.login-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Server reset message */
+.server-reset-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 25px 35px;
+  border-radius: 10px;
+  z-index: 2000;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+  border: 2px solid #ff0000;
+  max-width: 80%;
+}
+
+.server-reset-message p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 20px;
+  color: #ff6b6b;
+}
+
+/* World cycle display */
+.world-cycle {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #4ade80;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-left: auto;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  border: 1px solid #4ade80;
+}
+
+/* Delete account button */
+.delete-account-button {
+  background-color: #dc2626;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.2s;
+}
+
+.delete-account-button:hover {
+  background-color: #b91c1c;
+}
+
+/* Delete confirmation overlay */
+.delete-confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-dialog {
+  background-color: #1f2937;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.delete-confirmation-dialog h3 {
+  color: white;
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.delete-confirmation-dialog p {
+  color: #d1d5db;
+  margin-bottom: 20px;
+}
+
+.delete-confirmation-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-delete-button {
+  background-color: #dc2626;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.confirm-delete-button:hover {
+  background-color: #b91c1c;
+}
+
+.cancel-delete-button {
+  background-color: #4b5563;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.cancel-delete-button:hover {
+  background-color: #374151;
+}
+
+.delete-message {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fca5a5;
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 4px;
+  text-align: center;
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  max-width: 80%;
+}

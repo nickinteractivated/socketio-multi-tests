@@ -25,7 +25,7 @@ export default function PlayerList({ players, currentPlayerId }: PlayerListProps
                 <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                 <span className="font-medium">{player.username}</span>
                 {player.id === currentPlayerId && (
-                  <span className="ml-2 text-xs bg-blue-600 px-1 rounded">You</span>
+                  <span className="ml-2 text-xs bg-blue-600 px-1 rounded"> (You)</span>
                 )}
               </div>
               <span className="text-sm text-gray-300">Score: {player.score}</span>

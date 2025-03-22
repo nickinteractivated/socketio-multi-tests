@@ -22,6 +22,7 @@ export interface Tile {
   y: number;
   discovered: boolean;
   resource: ResourceType | null;
+  hasTree?: boolean;
 }
 
 export enum ResourceType {
@@ -49,4 +50,16 @@ export enum SocketEvents {
   COLLECT_RESOURCE = 'collectResource',
   PLAYER_DISCONNECT = 'playerDisconnect',
   UPDATE_LEADERBOARD = 'updateLeaderboard',
+  RESOURCE_REGENERATION = 'resourceRegenerationAnnouncement',
+  WORLD_CYCLE_UPDATE = 'worldCycleUpdate',
+  ANNOUNCEMENT = 'announcement',
+  PLAYER_UPDATE = 'playerUpdate',
+  MAP_UPDATE = 'mapUpdate',
+  MOVEMENT_BLOCKED = 'movementBlocked',
+  BLOCK_MOVEMENT = 'blockMovement'
+}
+
+export interface WorldCycleData {
+  cycle: number;
+  timestamp: number;
 } 
