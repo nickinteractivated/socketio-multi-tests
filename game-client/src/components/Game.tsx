@@ -34,18 +34,12 @@ export default function Game({ username, onLogout }: GameProps) {
 
     // Initialize socket connection
     useEffect(() => {
-        // Configure Socket.IO with optimized settings
+        // Simplified Socket.IO connection settings for better compatibility
         const newSocket = io(SERVER_URL, {
-            // Force WebSocket transport to avoid polling latency
-            transports: ['websocket'],
-            // Faster reconnection attempts
+            // Use both websocket and polling for maximum reliability
+            transports: ['websocket', 'polling'], 
             reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            timeout: 10000,
-            // Disable automatic reconnection attempts
-            reconnectionAttempts: 5,
-            // ForceNew ensures a clean connection (better for potential network issues)
-            forceNew: true
+            reconnectionAttempts: 5
         });
 
         // Set up event listeners

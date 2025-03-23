@@ -26,8 +26,6 @@ const io = new Server(server, {
   },
   // Force WebSocket transport for better performance
   transports: ['websocket'],
-  // Use the ws engine explicitly (more stable than uws)
-  wsEngine: 'ws',
   // Reduce ping timeout for faster reconnections
   pingTimeout: 10000,
   // Increase ping interval for more frequent connection checks
