@@ -12,7 +12,7 @@ interface GameProps {
 }
 
 // Server URL
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = 'https://socketio-multi-tests-production.up.railway.app/';
 
 export default function Game({ username, onLogout }: GameProps) {
     const [socket, setSocket] = useState<Socket | null>(null);
