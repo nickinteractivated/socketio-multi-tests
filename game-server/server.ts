@@ -555,7 +555,7 @@ io.on('connection', (socket) => {
     });
   });
   
-  // Player moves
+  // Player moves - optimized for performance
   socket.on(SocketEvents.PLAYER_MOVED, (newPosition: Position) => {
     if (!gameState.players[socket.id]) return;
     
@@ -565,27 +565,30 @@ io.on('connection', (socket) => {
         reason: 'regeneration',
         message: "Movement blocked during world regeneration"
       });
-      console.log(`Player ${socket.id} movement blocked due to regeneration in progress`);
       return;
     }
     
     // Validate movement (prevent cheating)
     const currentPosition = gameState.players[socket.id].position;
-    const isAdjacent = Math.abs(newPosition.x - currentPosition.x) <= 1 && 
-                     Math.abs(newPosition.y - currentPosition.y) <= 1 &&
-                     newPosition.x >= 0 && newPosition.x < MAP_WIDTH &&
-                     newPosition.y >= 0 && newPosition.y < MAP_HEIGHT;
+    
+    // Ensure only orthogonal movement (no diagonal)
+    const isOrthogonal = (
+      (Math.abs(newPosition.x - currentPosition.x) === 1 && newPosition.y === currentPosition.y) || 
+      (Math.abs(newPosition.y - currentPosition.y) === 1 && newPosition.x === currentPosition.x)
+    );
+    
+    const isInBounds = 
+      newPosition.x >= 0 && newPosition.x < MAP_WIDTH &&
+      newPosition.y >= 0 && newPosition.y < MAP_HEIGHT;
     
     // Check if destination has a tree
-    const destinationHasTree = isAdjacent && 
-                              gameState.map[newPosition.y] && 
-                              gameState.map[newPosition.y][newPosition.x] && 
-                              gameState.map[newPosition.y][newPosition.x].hasTree;
+    const destinationHasTree = isInBounds && 
+                             gameState.map[newPosition.y] && 
+                             gameState.map[newPosition.y][newPosition.x] && 
+                             gameState.map[newPosition.y][newPosition.x].hasTree;
     
-    // Only allow movement if the tile is adjacent and doesn't have a tree
-    const isValidMove = isAdjacent && !destinationHasTree;
-    
-    console.log(`Movement attempt: from (${currentPosition.x},${currentPosition.y}) to (${newPosition.x},${newPosition.y}) - Valid: ${isValidMove} - Has Tree: ${destinationHasTree}`);
+    // Only allow movement if the tile is orthogonal, in bounds, and doesn't have a tree
+    const isValidMove = isOrthogonal && isInBounds && !destinationHasTree;
     
     if (isValidMove) {
       // Update player position
@@ -593,6 +596,9 @@ io.on('connection', (socket) => {
       
       // Discover tiles around new position
       discoverTilesAroundPlayer(newPosition);
+      
+      // Create a minimal update for players - only send the updated player
+      io.emit(SocketEvents.PLAYER_UPDATE, gameState.players[socket.id]);
       
       // Check if player is on a resource tile
       const tile = gameState.map[newPosition.y][newPosition.x];
@@ -627,19 +633,32 @@ io.on('connection', (socket) => {
         // Remove resource from the map
         tile.resource = null;
         
-        // Update leaderboard
-        updateLeaderboard();
-        
-        // Save score to database immediately when collected
+        // Update leaderboard if score changed
         if (scoreIncreased) {
-          saveToDatabase();
+          updateLeaderboard();
+          
+          // Save to database but less frequently (only every 5 score increases)
+          if (player.score % 5 === 0) {
+            saveToDatabase();
+          }
         }
         
-        // Notify player about resource collection
+        // Send targeted updates rather than full state
+        // 1. Send resource collection notification to the player
         socket.emit(SocketEvents.COLLECT_RESOURCE, {
           position: newPosition,
-          player: gameState.players[socket.id]
+          player: player
         });
+        
+        // 2. Send updated tile to all clients
+        io.emit(SocketEvents.TILE_UPDATE, {
+          x: newPosition.x,
+          y: newPosition.y,
+          tile: tile
+        });
+        
+        // 3. Send updated player to all clients
+        io.emit(SocketEvents.PLAYER_UPDATE, player);
         
         // Check if all resources are depleted
         if (areAllResourcesDepleted()) {
@@ -653,20 +672,12 @@ io.on('connection', (socket) => {
           }, REGENERATION_ANNOUNCEMENT_DELAY);
         }
       }
-      
-      // Broadcast updated game state to all clients
-      io.emit(SocketEvents.GAME_STATE_UPDATE, {
-        players: gameState.players,
-        map: gameState.map,
-        leaderboard: gameState.leaderboard
-      });
     } else if (destinationHasTree) {
       // Inform player they can't move there due to a tree
       socket.emit('movementBlocked', {
         reason: 'tree',
         position: newPosition
       });
-      console.log(`Player ${socket.id} movement blocked by tree at (${newPosition.x},${newPosition.y})`);
     }
   });
   

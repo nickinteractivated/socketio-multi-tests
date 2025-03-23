@@ -48,17 +48,17 @@ export interface LeaderboardEntry {
 export enum SocketEvents {
   JOIN_GAME = 'joinGame',
   PLAYER_MOVED = 'playerMoved',
-  GAME_STATE_UPDATE = 'gameStateUpdate',
-  COLLECT_RESOURCE = 'collectResource',
-  PLAYER_DISCONNECT = 'playerDisconnect',
-  UPDATE_LEADERBOARD = 'updateLeaderboard',
-  RESOURCE_REGENERATION = 'resourceRegenerationAnnouncement',
-  WORLD_CYCLE_UPDATE = 'worldCycleUpdate',
-  ANNOUNCEMENT = 'announcement',
   PLAYER_UPDATE = 'playerUpdate',
-  MAP_UPDATE = 'mapUpdate',
+  PLAYER_DISCONNECT = 'playerDisconnect',
+  COLLECT_RESOURCE = 'collectResource',
+  GAME_STATE_UPDATE = 'gameStateUpdate',
+  UPDATE_LEADERBOARD = 'updateLeaderboard',
+  RESOURCE_REGENERATION = 'resourceRegeneration',
   MOVEMENT_BLOCKED = 'movementBlocked',
-  BLOCK_MOVEMENT = 'blockMovement'
+  ANNOUNCEMENT = 'announcement',
+  MAP_UPDATE = 'mapUpdate',
+  WORLD_CYCLE_UPDATE = 'worldCycleUpdate',
+  TILE_UPDATE = 'tileUpdate'
 }
 
 export interface WorldCycleData {

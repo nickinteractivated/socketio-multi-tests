@@ -31,6 +31,8 @@ export default function Game({ username, onLogout }: GameProps) {
     const [worldCycle, setWorldCycle] = useState<WorldCycleData>({ cycle: 1, timestamp: Date.now() });
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
+    const [lastMovementTime, setLastMovementTime] = useState<number>(0);
+    const MOVEMENT_THROTTLE = 100; // Minimum ms between movement requests
 
     // Initialize socket connection
     useEffect(() => {
@@ -160,6 +162,39 @@ export default function Game({ username, onLogout }: GameProps) {
             }));
         });
 
+        // Handle individual tile updates for better performance
+        newSocket.on(SocketEvents.TILE_UPDATE, (data: {x: number, y: number, tile: Tile}) => {
+            // Update just the single tile instead of the whole map
+            setGameState(prev => {
+                if (!prev.map || prev.map.length === 0 || !prev.map[data.y] || !prev.map[data.y][data.x]) {
+                    return prev;
+                }
+                
+                // Create new map with the updated tile
+                const newMap = [...prev.map];
+                newMap[data.y] = [...newMap[data.y]];
+                newMap[data.y][data.x] = data.tile;
+                
+                return {
+                    ...prev,
+                    map: newMap
+                };
+            });
+        });
+
+        // Handle player updates for better performance
+        newSocket.on(SocketEvents.PLAYER_UPDATE, (player: Player) => {
+            setGameState(prev => {
+                const newPlayers = {...prev.players};
+                newPlayers[player.id] = player;
+                
+                return {
+                    ...prev,
+                    players: newPlayers
+                };
+            });
+        });
+
         // Handle server reset notification
         newSocket.on('serverReset', (data: { message: string }) => {
             setResetMessage(data.message);
@@ -194,10 +229,28 @@ export default function Game({ username, onLogout }: GameProps) {
         };
     }, [username, onLogout]);
 
-    // Handle player movement
+    // Handle player movement with throttling to prevent excessive updates
     const handleMove = (position: Position) => {
         if (socket && connected) {
-            socket.emit(SocketEvents.PLAYER_MOVED, position);
+            const now = Date.now();
+            // Throttle movement requests to prevent flooding the server
+            if (now - lastMovementTime > MOVEMENT_THROTTLE) {
+                socket.emit(SocketEvents.PLAYER_MOVED, position);
+                setLastMovementTime(now);
+                
+                // Apply client-side prediction immediately for smoother experience
+                if (playerId && gameState.players[playerId]) {
+                    const updatedPlayers = {...gameState.players};
+                    const player = {...updatedPlayers[playerId]};
+                    player.position = position;
+                    updatedPlayers[playerId] = player;
+                    
+                    setGameState(prev => ({
+                        ...prev,
+                        players: updatedPlayers
+                    }));
+                }
+            }
         }
     };
 
