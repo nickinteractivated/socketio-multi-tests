@@ -25,7 +25,7 @@ export default function Game({ username, onLogout }: GameProps) {
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [regenerationMessage, setRegenerationMessage] = useState<string | null>(null);
-    const [blockMessage, setBlockMessage] = useState<string | null>(null);
+    // const [blockMessage, setBlockMessage] = useState<string | null>(null);
     const [restoredMessage, setRestoredMessage] = useState<string | null>(null);
     const [resetMessage, setResetMessage] = useState<string | null>(null);
     const [worldCycle, setWorldCycle] = useState<WorldCycleData>({ cycle: 1, timestamp: Date.now() });
@@ -56,7 +56,7 @@ export default function Game({ username, onLogout }: GameProps) {
             setConnected(false);
             setError('Disconnected from server');
         });
-        
+
         // Handle login errors
         newSocket.on('loginError', (data: { message: string }) => {
             setError(data.message);
@@ -66,12 +66,12 @@ export default function Game({ username, onLogout }: GameProps) {
                 onLogout();
             }, 3000);
         });
-        
+
         // Handle data restoration notification
         newSocket.on('dataRestored', (data: { message: string, score: number, resources: Resources }) => {
             setRestoredMessage(data.message);
             console.log('Player data restored:', data);
-            
+
             // Clear the message after some time
             setTimeout(() => {
                 setRestoredMessage(null);
@@ -81,7 +81,7 @@ export default function Game({ username, onLogout }: GameProps) {
         // Game state updates
         newSocket.on(SocketEvents.GAME_STATE_UPDATE, (state: GameState) => {
             console.log('Received game state update');
-            
+
             // Check if map was updated with resources
             if (state.map) {
                 let resourceCount = 0;
@@ -92,7 +92,7 @@ export default function Game({ username, onLogout }: GameProps) {
                 });
                 console.log(`Map update received with ${resourceCount} resources`);
             }
-            
+
             setGameState(prevState => {
                 // If we only got partial state, merge it with existing state
                 return {
@@ -125,57 +125,23 @@ export default function Game({ username, onLogout }: GameProps) {
         // Resource regeneration announcement
         newSocket.on(SocketEvents.RESOURCE_REGENERATION, (data: { message: string }) => {
             setRegenerationMessage(data.message);
-            
+
             // Clear the message after the regeneration occurs
             setTimeout(() => {
                 setRegenerationMessage(null);
             }, 5000); // Show message for 5 seconds
         });
 
-        // Movement blocked notification
-        newSocket.on('movementBlocked', (data: { reason: string, position: Position }) => {
-            if (data.reason === 'tree') {
-                setBlockMessage("Cannot move there - blocked by a tree!");
-                
-                // Clear message after a short delay
-                setTimeout(() => {
-                    setBlockMessage(null);
-                }, 2000);
-            }
-        });
-        
-        // Handle movement blocked during regeneration
-        newSocket.on(SocketEvents.MOVEMENT_BLOCKED, (data: { reason: string, message: string }) => {
-            console.log('Movement blocked:', data.reason, data.message);
-            setBlockMessage(data.message || "Movement blocked during world regeneration");
-            
-            // Clear message after a short delay
-            setTimeout(() => {
-                setBlockMessage(null);
-            }, 3000);
-        });
-        
-        // For backwards compatibility - handle both event types
-        newSocket.on(SocketEvents.BLOCK_MOVEMENT, (data: { reason: string, message: string }) => {
-            console.log('Movement blocked (legacy event):', data.reason, data.message);
-            setBlockMessage(data.message || "Movement blocked");
-            
-            // Clear message after a short delay
-            setTimeout(() => {
-                setBlockMessage(null);
-            }, 3000);
-        });
-        
         // Handle announcements
         newSocket.on(SocketEvents.ANNOUNCEMENT, (data: { message: string }) => {
             setRegenerationMessage(data.message);
-            
+
             // Clear the message after a delay
             setTimeout(() => {
                 setRegenerationMessage(null);
             }, 5000);
         });
-        
+
         // Handle specific map updates
         newSocket.on(SocketEvents.MAP_UPDATE, (map: Tile[][]) => {
             console.log('Received direct map update');
@@ -188,14 +154,14 @@ export default function Game({ username, onLogout }: GameProps) {
         // Handle server reset notification
         newSocket.on('serverReset', (data: { message: string }) => {
             setResetMessage(data.message);
-            
+
             // Disconnect and redirect to login after a short delay
             setTimeout(() => {
                 newSocket.disconnect();
                 onLogout();
             }, 3000);
         });
-        
+
         // Handle world cycle updates
         newSocket.on(SocketEvents.WORLD_CYCLE_UPDATE, (data: WorldCycleData) => {
             console.log(`World Cycle updated to: Cycle #${data.cycle}`);
@@ -205,7 +171,7 @@ export default function Game({ username, onLogout }: GameProps) {
         // Handle account deleted notification
         newSocket.on('accountDeleted', (data: { message: string }) => {
             setDeleteMessage(data.message);
-            
+
             // Disconnect and redirect to login after a short delay
             setTimeout(() => {
                 newSocket.disconnect();
@@ -239,7 +205,7 @@ export default function Game({ username, onLogout }: GameProps) {
     // Handle account deletion
     const handleDeleteAccount = async () => {
         if (!username) return;
-        
+
         try {
             const response = await fetch(`${SERVER_URL}/api/deleteAccount`, {
                 method: 'POST',
@@ -248,9 +214,9 @@ export default function Game({ username, onLogout }: GameProps) {
                 },
                 body: JSON.stringify({ username }),
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 setDeleteMessage("Account successfully deleted. Returning to login...");
                 setTimeout(() => {
@@ -270,7 +236,7 @@ export default function Game({ username, onLogout }: GameProps) {
                 setDeleteMessage(null);
             }, 3000);
         }
-        
+
         // Close confirmation dialog
         setIsDeleteConfirmOpen(false);
     };
@@ -327,14 +293,14 @@ export default function Game({ username, onLogout }: GameProps) {
                             <h3>Delete Account</h3>
                             <p>Are you sure you want to delete your account? This action cannot be undone.</p>
                             <div className="delete-confirmation-buttons">
-                                <button 
-                                    onClick={handleDeleteAccount} 
+                                <button
+                                    onClick={handleDeleteAccount}
                                     className="confirm-delete-button"
                                 >
                                     Yes, Delete My Account
                                 </button>
-                                <button 
-                                    onClick={() => setIsDeleteConfirmOpen(false)} 
+                                <button
+                                    onClick={() => setIsDeleteConfirmOpen(false)}
                                     className="cancel-delete-button"
                                 >
                                     Cancel
@@ -372,13 +338,6 @@ export default function Game({ username, onLogout }: GameProps) {
                     </div>
                 )}
 
-                {/* Movement blocked message */}
-                {blockMessage && !resetMessage && (
-                    <div className="movement-blocked-message">
-                        <p>{blockMessage}</p>
-                    </div>
-                )}
-
                 {/* Main game layout - sidebar left, map right */}
                 <div className="main-game-layout">
                     {/* Sidebar with stats and info - fixed width */}
@@ -405,19 +364,20 @@ export default function Game({ username, onLogout }: GameProps) {
                             Use <span className="text-white">WASD</span> or <span className="text-white">arrow keys</span> to move.
                             Click on adjacent tiles also works. Collect resources to earn points.
                         </p>
-
                         <div className="resource-legend">
                             <div className="resource-item">
-                                <span className="resource-dot resource-coal"></span>
-                                <span>Coal</span>
+                                {/* <span className="resource-dot resource-coal"></span> */}
+                                <span>Coal <div className='coal-circle'></div>1 point</span>
                             </div>
                             <div className="resource-item">
-                                <span className="resource-dot resource-gas"></span>
-                                <span>Gas</span>
+                                {/* <span className="resource-dot resource-gas"></span> */}
+                                <span>Gas <div className='gas-circle'></div>2 points</span>
                             </div>
                             <div className="resource-item">
-                                <span className="resource-dot resource-oil"></span>
-                                <span>Oil</span>
+                                <span>Oil <div className='oil-circle'></div> 3 points</span>
+                            </div>
+                            <div className="resource-item">
+                                <span>Gold <div className='gold-circle'></div> 5 points</span>
                             </div>
                         </div>
                     </div>

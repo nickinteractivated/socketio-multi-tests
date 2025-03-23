@@ -15,6 +15,7 @@ export interface Resources {
   coal: number;
   gas: number;
   oil: number;
+  gold: number;
 }
 
 export interface Tile {
@@ -29,6 +30,7 @@ export enum ResourceType {
   COAL = 'COAL',
   GAS = 'GAS',
   OIL = 'OIL',
+  GOLD = 'GOLD',
 }
 
 export interface GameState {

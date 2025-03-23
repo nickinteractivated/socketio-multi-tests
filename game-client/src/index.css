@@ -61,26 +61,6 @@ button:focus-visible {
   gap: 1rem;
 }
 
-.flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    /* background-color: #16213e; */
-    /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); */
-}
-
-/* .game-map-container {
-  flex: 1;
-  max-width: 100px;
-}
-
-.game-map-canvas {
-  width: 100%;
-  height: 100%;
-  border: 1px solid #ccc;
-} */
-
 .regeneration-announcement {
   position: fixed;
   top: 70px;
@@ -314,4 +294,165 @@ button:focus-visible {
   transform: translateX(-50%);
   z-index: 50;
   max-width: 80%;
+}
+
+/* Leaderboard styles */
+.bg-gray-800 {
+  background-color: rgba(30, 41, 59, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bg-gray-700 {
+  background-color: rgba(55, 65, 81, 0.7);
+  transition: background-color 0.2s;
+}
+
+.bg-gray-700:hover {
+  background-color: rgba(75, 85, 99, 0.8);
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-green-400 {
+  color: #4ade80;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.w-6 {
+  width: 1.5rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Resource circles for player stats */
+.coal-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #333333;
+  margin: 0 5px;
+}
+
+.gas-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #8cc9c9;
+  margin: 0 5px;
+}
+
+.oil-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #111111;
+  margin: 0 5px;
+}
+
+.gold-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #FFD700;
+  margin: 0 5px;
+}
+
+/* Resource legend dots */
+.resource-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.resource-coal {
+  background-color: #333333;
+}
+
+.resource-gas {
+  background-color: #8cc9c9;
+}
+
+.resource-oil {
+  background-color: #111111;
+}
+
+.resource-gold {
+  background-color: #FFD700;
+}
+
+/* Resource legend container */
+.resource-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: white;
 }

@@ -29,8 +29,8 @@ app.use(cors());
 // Game Constants
 const MAP_WIDTH = 30;
 const MAP_HEIGHT = 30;
-const RESOURCE_DENSITY = 0.1; // 10% of tiles will have resources
-const TREE_DENSITY = 0.10; // 12% of tiles will have trees
+const RESOURCE_DENSITY = 0.15; // Increased from 0.1 to 0.15 (15% of tiles will have resources)
+const TREE_DENSITY = 0.09; // 9% of tiles will have trees
 const REGENERATION_ANNOUNCEMENT_DELAY = 3000; // 3 seconds delay before regeneration
 
 // Game State
@@ -59,6 +59,12 @@ function initializeMap(): Tile[][] {
   const map: Tile[][] = [];
   let resourceCount = 0;
   let treeCount = 0;
+  let resourceTypeCount = {
+    coal: 0,
+    gas: 0,
+    oil: 0,
+    gold: 0
+  };
   
   for (let y = 0; y < MAP_HEIGHT; y++) {
     const row: Tile[] = [];
@@ -68,14 +74,27 @@ function initializeMap(): Tile[][] {
       let resource = null;
       
       if (hasResource) {
-        const resourceRoll = Math.random();
-        if (resourceRoll < 0.33) {
+        // Updated resource distribution: Coal 40%, Gas 30%, Oil 25%, Gold 5%
+        const resourceRoll = Math.random() * 100; // Roll 0-100
+        
+        if (resourceRoll < 40) {
+          // 40% chance of coal
           resource = ResourceType.COAL;
-        } else if (resourceRoll < 0.66) {
+          resourceTypeCount.coal++;
+        } else if (resourceRoll < 70) {
+          // 30% chance of gas (40% + 30% = 70%)
           resource = ResourceType.GAS;
-        } else {
+          resourceTypeCount.gas++;
+        } else if (resourceRoll < 95) {
+          // 25% chance of oil (70% + 25% = 95%)
           resource = ResourceType.OIL;
+          resourceTypeCount.oil++;
+        } else {
+          // 5% chance of gold (95% + 5% = 100%)
+          resource = ResourceType.GOLD;
+          resourceTypeCount.gold++;
         }
+        
         resourceCount++;
       }
       
@@ -95,6 +114,7 @@ function initializeMap(): Tile[][] {
   }
   
   console.log(`Map initialized with ${resourceCount} resources and ${treeCount} trees`);
+  console.log(`Resource distribution: Coal: ${resourceTypeCount.coal}, Gas: ${resourceTypeCount.gas}, Oil: ${resourceTypeCount.oil}, Gold: ${resourceTypeCount.gold}`);
   return map;
 }
 
@@ -188,6 +208,9 @@ function regenerateResources(): void {
         const pos = findValidPosition(playerPositions[socketId]);
         player.position.x = pos.x;
         player.position.y = pos.y;
+        
+        // Discover tiles around the player's new position
+        discoverTilesAroundPlayer(player.position);
       }
     });
     
@@ -337,7 +360,7 @@ function updateLeaderboard() {
 
 // Handle discovering tiles around a player
 function discoverTilesAroundPlayer(position: Position) {
-  const radius = 2; // How many tiles around the player are discovered
+  const radius = 1; // Reduced from 2 to 1 - now reveals a 3x3 grid instead of 5x5
   
   for (let y = Math.max(0, position.y - radius); y <= Math.min(MAP_HEIGHT - 1, position.y + radius); y++) {
     for (let x = Math.max(0, position.x - radius); x <= Math.min(MAP_WIDTH - 1, position.x + radius); x++) {
@@ -446,23 +469,25 @@ io.on('connection', (socket) => {
       resources: savedPlayerData ? {
         coal: savedPlayerData.resources.coal || 0,
         gas: savedPlayerData.resources.gas || 0,
-        oil: savedPlayerData.resources.oil || 0
+        oil: savedPlayerData.resources.oil || 0,
+        gold: savedPlayerData.resources.gold || 0
       } : {
         coal: 0,
         gas: 0,
-        oil: 0
+        oil: 0,
+        gold: 0
       }
     };
     
     // Debug log saved vs restored data
     if (savedPlayerData) {
       console.log(`DETAILED RESTORE for ${username}:`);
-      console.log(`  FROM DB → Score: ${savedPlayerData.score}, Coal: ${savedPlayerData.resources.coal}, Gas: ${savedPlayerData.resources.gas}, Oil: ${savedPlayerData.resources.oil}`);
-      console.log(`  TO PLAYER → Score: ${player.score}, Coal: ${player.resources.coal}, Gas: ${player.resources.gas}, Oil: ${player.resources.oil}`);
+      console.log(`  FROM DB → Score: ${savedPlayerData.score}, Coal: ${savedPlayerData.resources.coal}, Gas: ${savedPlayerData.resources.gas}, Oil: ${savedPlayerData.resources.oil}, Gold: ${savedPlayerData.resources.gold || 0}`);
+      console.log(`  TO PLAYER → Score: ${player.score}, Coal: ${player.resources.coal}, Gas: ${player.resources.gas}, Oil: ${player.resources.oil}, Gold: ${player.resources.gold}`);
       
       // Notify player that their data was restored
       socket.emit('dataRestored', {
-        message: `Welcome back, ${username}! Your progress has been restored.`,
+        message: `Welcome back, ${username}!`,
         score: player.score,
         resources: player.resources
       });
@@ -480,8 +505,9 @@ io.on('connection', (socket) => {
     // Log active connections after adding player
     logActiveConnections();
     
-    // Discover tiles around player
+    // Discover tiles around player - ensure initial visibility
     discoverTilesAroundPlayer(position);
+    console.log(`Discovered initial 3x3 area around player ${username} at (${position.x}, ${position.y})`);
     
     // Update leaderboard to include this player
     updateLeaderboard();
@@ -562,6 +588,11 @@ io.on('connection', (socket) => {
           case ResourceType.OIL:
             player.resources.oil += 1;
             player.score += 3;
+            scoreIncreased = true;
+            break;
+          case ResourceType.GOLD:
+            player.resources.gold += 1;
+            player.score += 5;
             scoreIncreased = true;
             break;
         }

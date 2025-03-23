@@ -1,32 +1,65 @@
 {
   "leaderboard": [
     {
+      "username": "sammy",
+      "score": 560
+    },
+    {
       "username": "nick",
-      "score": 24
+      "score": 94
+    },
+    {
+      "username": "mayu",
+      "score": 4
     },
     {
       "username": "josh",
       "score": 0
-    },
-    {
-      "username": "sammy",
-      "score": 0
     }
   ],
   "players": {
-    "nick": {
-      "username": "nick",
-      "score": 24,
+    "sammy": {
+      "username": "sammy",
+      "score": 560,
       "resources": {
-        "coal": 0,
-        "gas": 6,
-        "oil": 4
+        "coal": 111,
+        "gas": 85,
+        "oil": 88,
+        "gold": 3
       },
       "position": {
-        "x": 24,
+        "x": 26,
         "y": 13
       },
-      "lastSeen": 1742637652679
+      "lastSeen": 1742694706114
+    },
+    "nick": {
+      "username": "nick",
+      "score": 94,
+      "resources": {
+        "coal": 10,
+        "gas": 21,
+        "oil": 14
+      },
+      "position": {
+        "x": 20,
+        "y": 9
+      },
+      "lastSeen": 1742692597110
+    },
+    "mayu": {
+      "username": "mayu",
+      "score": 4,
+      "resources": {
+        "coal": 2,
+        "gas": 1,
+        "oil": 0
+      },
+      "position": {
+        "x": 22,
+        "y": 5
+      },
+      "lastSeen": 1742692567828
     },
     "josh": {
       "username": "josh",
@@ -41,24 +74,10 @@
         "y": 5
       },
       "lastSeen": 1742637567293
-    },
-    "sammy": {
-      "username": "sammy",
-      "score": 0,
-      "resources": {
-        "coal": 0,
-        "gas": 0,
-        "oil": 0
-      },
-      "position": {
-        "x": 12,
-        "y": 8
-      },
-      "lastSeen": 1742637513321
     }
   },
   "worldCycle": {
-    "cycle": 2,
-    "timestamp": 1742636946061
+    "cycle": 4,
+    "timestamp": 1742694024808
   }
 }

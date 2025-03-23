@@ -89,13 +89,14 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
         };
     }, [currentPlayer, mapWidth, mapHeight, onMove]);
 
+    // Handle the main rendering logic - simplified, no animation frames
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas || !map.length) return;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-
+        
         // Clear canvas
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -167,6 +168,9 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
                             case ResourceType.OIL:
                                 resourceColor = '#111111'; // Black for oil
                                 break;
+                            case ResourceType.GOLD:
+                                resourceColor = '#FFD700'; // Gold color
+                                break;
                             default:
                                 resourceColor = '#ffffff';
                         }
@@ -174,14 +178,27 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
                         // Draw resource icon
                         ctx.fillStyle = resourceColor;
                         ctx.beginPath();
+                        
+                        // Make gold resources slightly larger than other resources
+                        const radius = tile.resource === ResourceType.GOLD ? 
+                            tileSize / 3.5 : // Larger radius for gold
+                            tileSize / 4;    // Regular radius for other resources
+                            
                         ctx.arc(
                             x * tileSize + tileSize / 2,
                             y * tileSize + tileSize / 2,
-                            tileSize / 4, // Radius
+                            radius,
                             0,
                             2 * Math.PI
                         );
                         ctx.fill();
+                        
+                        // Add a simple border for gold resources instead of complex effects
+                        if (tile.resource === ResourceType.GOLD) {
+                            ctx.strokeStyle = '#FFA500'; // Orange border
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        }
                     }
                 }
             }
@@ -212,7 +229,6 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
             ctx.textAlign = 'center';
             ctx.fillText(player.username, x * tileSize + tileSize / 2, y * tileSize - 5);
         });
-
     }, [map, players, currentPlayerId, canvasWidth, canvasHeight, mapWidth, mapHeight]);
 
     // Handle canvas click for player movement
