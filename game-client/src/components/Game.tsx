@@ -34,7 +34,16 @@ export default function Game({ username, onLogout }: GameProps) {
 
     // Initialize socket connection
     useEffect(() => {
-        const newSocket = io(SERVER_URL);
+        const newSocket = io(SERVER_URL, {
+            withCredentials: true,
+            extraHeaders: {
+                "my-custom-header": "value"
+            },
+            transports: ['websocket', 'polling'],
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 20000 // Increase connection timeout
+        });
 
         // Set up event listeners
         newSocket.on('connect', () => {

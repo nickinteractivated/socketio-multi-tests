@@ -19,12 +19,39 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+    origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+  },
+  allowEIO3: true, // Allow Engine.IO version 3 compatibility
+  pingTimeout: 60000, // Increase ping timeout to handle slower connections
+  transports: ['websocket', 'polling'] // Explicitly set transports
 });
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+}));
+
+// Add preflight handler for OPTIONS requests
+app.options('*', cors({
+  origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+}));
+
+// Set explicit headers for all responses
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, my-custom-header');
+  next();
+});
 
 // Game Constants
 const MAP_WIDTH = 30;
