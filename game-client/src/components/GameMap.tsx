@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect } from 'react';
 import { Tile, Player, Position, ResourceType } from '../types/GameTypes';
 
 interface GameMapProps {
@@ -15,17 +15,11 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
     // Get current player position
     const currentPlayer = players[currentPlayerId];
 
-    // Calculate canvas dimensions using useMemo to prevent unnecessary recalculations
-    const { mapWidth, mapHeight, canvasWidth, canvasHeight } = useMemo(() => {
-        const width = map[0]?.length || 0;
-        const height = map.length || 0;
-        return {
-            mapWidth: width,
-            mapHeight: height,
-            canvasWidth: width * tileSize,
-            canvasHeight: height * tileSize
-        };
-    }, [map, tileSize]);
+    // Simple calculation of dimensions
+    const mapWidth = map[0]?.length || 0;
+    const mapHeight = map.length || 0;
+    const canvasWidth = mapWidth * tileSize;
+    const canvasHeight = mapHeight * tileSize;
 
     // Handle keyboard movement
     useEffect(() => {
@@ -112,7 +106,7 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
         };
     }, [currentPlayer, mapWidth, mapHeight, onMove]);
 
-    // Optimize rendering with useMemo to avoid excessive re-renders
+    // Simple, efficient rendering
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas || !map.length) return;
@@ -120,126 +114,119 @@ export default function GameMap({ map, players, currentPlayerId, onMove }: GameM
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
         
-        // Clear only the size we're actually using
+        // Clear canvas
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Create a separate drawing function that is carefully optimized
-        const drawMap = () => {
-            // Draw tiles
-            for (let y = 0; y < mapHeight; y++) {
-                for (let x = 0; x < mapWidth; x++) {
-                    const tile = map[y][x];
-                    
-                    if (!tile) continue; // Skip if tile doesn't exist
+        // Draw tiles
+        for (let y = 0; y < mapHeight; y++) {
+            for (let x = 0; x < mapWidth; x++) {
+                const tile = map[y][x];
+                if (!tile) continue;
 
-                    if (!tile.discovered) {
-                        // Draw fog of war
-                        ctx.fillStyle = '#111111';
-                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                    } else {
-                        // Draw discovered tile
-                        ctx.fillStyle = '#285e45'; // Base tile color (grass)
-                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                if (!tile.discovered) {
+                    // Draw fog of war
+                    ctx.fillStyle = '#111111';
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                } else {
+                    // Draw discovered tile
+                    ctx.fillStyle = '#285e45'; // Base tile color (grass)
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
-                        // Draw tile border
-                        ctx.strokeStyle = '#193324';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    // Draw tile border
+                    ctx.strokeStyle = '#193324';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
 
-                        // Draw tree if present
-                        if (tile.hasTree) {
-                            // Draw tree trunk (brown rectangle)
-                            ctx.fillStyle = '#6b4226'; // Tree trunk brown
-                            ctx.fillRect(
-                                x * tileSize + tileSize / 2 - 2, 
-                                y * tileSize + tileSize / 2, 
-                                4, 
-                                tileSize / 2 - 2
-                            );
-                            
-                            // Draw tree foliage (green circle)
-                            ctx.fillStyle = '#1d4120'; // Dark green for leaves
-                            ctx.beginPath();
-                            ctx.arc(
-                                x * tileSize + tileSize / 2,
-                                y * tileSize + tileSize / 3,
-                                tileSize / 3, // Radius
-                                0,
-                                2 * Math.PI
-                            );
-                            ctx.fill();
-                            
-                            // Add some lighter green highlights
-                            ctx.fillStyle = '#2a5a2a'; // Lighter green
-                            ctx.beginPath();
-                            ctx.arc(
-                                x * tileSize + tileSize / 2 - 2,
-                                y * tileSize + tileSize / 3 - 2,
-                                tileSize / 5, // Smaller radius
-                                0,
-                                2 * Math.PI
-                            );
-                            ctx.fill();
+                    // Draw tree if present
+                    if (tile.hasTree) {
+                        // Draw tree trunk (brown rectangle)
+                        ctx.fillStyle = '#6b4226'; // Tree trunk brown
+                        ctx.fillRect(
+                            x * tileSize + tileSize / 2 - 2, 
+                            y * tileSize + tileSize / 2, 
+                            4, 
+                            tileSize / 2 - 2
+                        );
+                        
+                        // Draw tree foliage (green circle)
+                        ctx.fillStyle = '#1d4120'; // Dark green for leaves
+                        ctx.beginPath();
+                        ctx.arc(
+                            x * tileSize + tileSize / 2,
+                            y * tileSize + tileSize / 3,
+                            tileSize / 3, // Radius
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                        
+                        // Add some lighter green highlights
+                        ctx.fillStyle = '#2a5a2a'; // Lighter green
+                        ctx.beginPath();
+                        ctx.arc(
+                            x * tileSize + tileSize / 2 - 2,
+                            y * tileSize + tileSize / 3 - 2,
+                            tileSize / 5, // Smaller radius
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                    }
+
+                    // Draw resource if present
+                    if (tile.resource) {
+                        let resourceColor;
+                        switch (tile.resource) {
+                            case ResourceType.COAL:
+                                resourceColor = '#333333'; // Dark gray for coal
+                                break;
+                            case ResourceType.GAS:
+                                resourceColor = '#8cc9c9'; // Light blue for gas
+                                break;
+                            case ResourceType.OIL:
+                                resourceColor = '#111111'; // Black for oil
+                                break;
+                            case ResourceType.GOLD:
+                                resourceColor = '#FFD700'; // Gold color
+                                break;
+                            default:
+                                resourceColor = '#ffffff';
                         }
 
-                        // Draw resource if present
-                        if (tile.resource) {
-                            let resourceColor;
-                            switch (tile.resource) {
-                                case ResourceType.COAL:
-                                    resourceColor = '#333333'; // Dark gray for coal
-                                    break;
-                                case ResourceType.GAS:
-                                    resourceColor = '#8cc9c9'; // Light blue for gas
-                                    break;
-                                case ResourceType.OIL:
-                                    resourceColor = '#111111'; // Black for oil
-                                    break;
-                                case ResourceType.GOLD:
-                                    resourceColor = '#FFD700'; // Gold color
-                                    break;
-                                default:
-                                    resourceColor = '#ffffff';
-                            }
-
-                            // Draw resource icon
-                            ctx.fillStyle = resourceColor;
-                            ctx.beginPath();
+                        // Draw resource icon
+                        ctx.fillStyle = resourceColor;
+                        ctx.beginPath();
+                        
+                        // Make gold resources slightly larger than other resources
+                        const radius = tile.resource === ResourceType.GOLD ? 
+                            tileSize / 3.5 : // Larger radius for gold
+                            tileSize / 4;    // Regular radius for other resources
                             
-                            // Make gold resources slightly larger than other resources
-                            const radius = tile.resource === ResourceType.GOLD ? 
-                                tileSize / 3.5 : // Larger radius for gold
-                                tileSize / 4;    // Regular radius for other resources
-                                
-                            ctx.arc(
-                                x * tileSize + tileSize / 2,
-                                y * tileSize + tileSize / 2,
-                                radius,
-                                0,
-                                2 * Math.PI
-                            );
-                            ctx.fill();
-                            
-                            // Add a simple border for gold resources instead of complex effects
-                            if (tile.resource === ResourceType.GOLD) {
-                                ctx.strokeStyle = '#FFA500'; // Orange border
-                                ctx.lineWidth = 2;
-                                ctx.stroke();
-                            }
+                        ctx.arc(
+                            x * tileSize + tileSize / 2,
+                            y * tileSize + tileSize / 2,
+                            radius,
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                        
+                        // Add a simple border for gold resources instead of complex effects
+                        if (tile.resource === ResourceType.GOLD) {
+                            ctx.strokeStyle = '#FFA500'; // Orange border
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
                         }
                     }
                 }
             }
-        };
+        }
 
-        // Draw the map
-        drawMap();
-
-        // Draw players - moved after map so players are always on top
+        // Draw players
         Object.values(players).forEach(player => {
             const { x, y } = player.position;
             
-            // Skip drawing players that are outside visible area (happens during regeneration)
+            // Skip drawing players that are outside visible area
             if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return;
 
             // Draw player circle

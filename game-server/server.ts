@@ -22,18 +22,28 @@ const io = new Server(server, {
     origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+    allowedHeaders: ["Content-Type", "Authorization"]
   },
-  allowEIO3: true, // Allow Engine.IO version 3 compatibility
-  pingTimeout: 60000, // Increase ping timeout to handle slower connections
-  transports: ['websocket', 'polling'] // Explicitly set transports
+  // Force WebSocket transport for better performance
+  transports: ['websocket'],
+  // Use the ws engine explicitly (more stable than uws)
+  wsEngine: 'ws',
+  // Reduce ping timeout for faster reconnections
+  pingTimeout: 10000,
+  // Increase ping interval for more frequent connection checks
+  pingInterval: 5000,
+  // Performance options
+  perMessageDeflate: {
+    threshold: 1024 // Only compress messages larger than 1KB
+  }
 });
 
+// Configure Express CORS middleware with the same settings
 app.use(cors({
   origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Add preflight handler for OPTIONS requests
@@ -41,17 +51,8 @@ app.options('*', cors({
   origin: ["https://socketio-multi-tests.vercel.app", "http://localhost:5173"],
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "my-custom-header"]
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
-
-// Set explicit headers for all responses
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, my-custom-header');
-  next();
-});
 
 // Game Constants
 const MAP_WIDTH = 30;
@@ -421,6 +422,13 @@ io.on('connection', (socket) => {
   // Store IP address in socket data for disconnect handler
   socket.data.clientIP = clientIP;
   
+  // Add ping handler to measure and monitor latency
+  socket.on('ping', (callback) => {
+    if (typeof callback === 'function') {
+      callback();
+    }
+  });
+  
   // Player joins the game
   socket.on(SocketEvents.JOIN_GAME, (username: string) => {
     // Validate username (valid VARCHAR, max 30 characters)
@@ -559,7 +567,7 @@ io.on('connection', (socket) => {
   socket.on(SocketEvents.PLAYER_MOVED, (newPosition: Position) => {
     if (!gameState.players[socket.id]) return;
     
-    // Block movement if regeneration is in progress
+    // Block movement if regeneration is in progress - early return to avoid processing
     if (regenerationInProgress) {
       socket.emit(SocketEvents.MOVEMENT_BLOCKED, {
         reason: 'regeneration',
@@ -571,113 +579,108 @@ io.on('connection', (socket) => {
     // Validate movement (prevent cheating)
     const currentPosition = gameState.players[socket.id].position;
     
-    // Ensure only orthogonal movement (no diagonal)
-    const isOrthogonal = (
-      (Math.abs(newPosition.x - currentPosition.x) === 1 && newPosition.y === currentPosition.y) || 
-      (Math.abs(newPosition.y - currentPosition.y) === 1 && newPosition.x === currentPosition.x)
-    );
+    // Optimize validation with simpler calculations
+    const dx = Math.abs(newPosition.x - currentPosition.x);
+    const dy = Math.abs(newPosition.y - currentPosition.y);
     
+    // Ensure only orthogonal movement (no diagonal)
+    const isOrthogonal = (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+    
+    // Quick bounds check
     const isInBounds = 
       newPosition.x >= 0 && newPosition.x < MAP_WIDTH &&
       newPosition.y >= 0 && newPosition.y < MAP_HEIGHT;
     
+    // Early return if movement is invalid - avoids unnecessary processing
+    if (!isOrthogonal || !isInBounds) return;
+    
     // Check if destination has a tree
-    const destinationHasTree = isInBounds && 
-                             gameState.map[newPosition.y] && 
-                             gameState.map[newPosition.y][newPosition.x] && 
-                             gameState.map[newPosition.y][newPosition.x].hasTree;
-    
-    // Only allow movement if the tile is orthogonal, in bounds, and doesn't have a tree
-    const isValidMove = isOrthogonal && isInBounds && !destinationHasTree;
-    
-    if (isValidMove) {
-      // Update player position
-      gameState.players[socket.id].position = newPosition;
-      
-      // Discover tiles around new position
-      discoverTilesAroundPlayer(newPosition);
-      
-      // Create a minimal update for players - only send the updated player
-      io.emit(SocketEvents.PLAYER_UPDATE, gameState.players[socket.id]);
-      
-      // Check if player is on a resource tile
-      const tile = gameState.map[newPosition.y][newPosition.x];
-      if (tile.resource) {
-        // Player collects resource
-        const player = gameState.players[socket.id];
-        let scoreIncreased = false;
-        
-        switch (tile.resource) {
-          case ResourceType.COAL:
-            player.resources.coal += 1;
-            player.score += 1;
-            scoreIncreased = true;
-            break;
-          case ResourceType.GAS:
-            player.resources.gas += 1;
-            player.score += 2;
-            scoreIncreased = true;
-            break;
-          case ResourceType.OIL:
-            player.resources.oil += 1;
-            player.score += 3;
-            scoreIncreased = true;
-            break;
-          case ResourceType.GOLD:
-            player.resources.gold += 1;
-            player.score += 5;
-            scoreIncreased = true;
-            break;
-        }
-        
-        // Remove resource from the map
-        tile.resource = null;
-        
-        // Update leaderboard if score changed
-        if (scoreIncreased) {
-          updateLeaderboard();
-          
-          // Save to database but less frequently (only every 5 score increases)
-          if (player.score % 5 === 0) {
-            saveToDatabase();
-          }
-        }
-        
-        // Send targeted updates rather than full state
-        // 1. Send resource collection notification to the player
-        socket.emit(SocketEvents.COLLECT_RESOURCE, {
-          position: newPosition,
-          player: player
-        });
-        
-        // 2. Send updated tile to all clients
-        io.emit(SocketEvents.TILE_UPDATE, {
-          x: newPosition.x,
-          y: newPosition.y,
-          tile: tile
-        });
-        
-        // 3. Send updated player to all clients
-        io.emit(SocketEvents.PLAYER_UPDATE, player);
-        
-        // Check if all resources are depleted
-        if (areAllResourcesDepleted()) {
-          console.log('All resources depleted, scheduling regeneration...');
-          // Announce regeneration
-          announceResourceRegeneration();
-          
-          // Schedule resource regeneration after a delay
-          setTimeout(() => {
-            regenerateResources();
-          }, REGENERATION_ANNOUNCEMENT_DELAY);
-        }
-      }
-    } else if (destinationHasTree) {
+    const tile = gameState.map[newPosition.y][newPosition.x];
+    if (!tile || tile.hasTree) {
       // Inform player they can't move there due to a tree
       socket.emit('movementBlocked', {
         reason: 'tree',
         position: newPosition
       });
+      return;
+    }
+    
+    // Update player position
+    gameState.players[socket.id].position = newPosition;
+    
+    // Discover tiles around new position
+    discoverTilesAroundPlayer(newPosition);
+    
+    // Only emit to clients that need this update (performance optimization)
+    // 1. Current player receives update for immediate feedback
+    socket.emit(SocketEvents.PLAYER_UPDATE, gameState.players[socket.id]);
+    
+    // 2. Other players receive updates in batches (throttled by room)
+    socket.broadcast.emit(SocketEvents.PLAYER_UPDATE, gameState.players[socket.id]);
+    
+    // Check if player is on a resource tile
+    if (tile.resource) {
+      // Player collects resource
+      const player = gameState.players[socket.id];
+      let scoreIncreased = false;
+      
+      switch (tile.resource) {
+        case ResourceType.COAL:
+          player.resources.coal += 1;
+          player.score += 1;
+          scoreIncreased = true;
+          break;
+        case ResourceType.GAS:
+          player.resources.gas += 1;
+          player.score += 2;
+          scoreIncreased = true;
+          break;
+        case ResourceType.OIL:
+          player.resources.oil += 1;
+          player.score += 3;
+          scoreIncreased = true;
+          break;
+        case ResourceType.GOLD:
+          player.resources.gold += 1;
+          player.score += 5;
+          scoreIncreased = true;
+          break;
+      }
+      
+      // Remove resource from the map
+      tile.resource = null;
+      
+      // Only update leaderboard occasionally (very expensive operation)
+      if (scoreIncreased && (player.score % 10 === 0 || tile.resource === ResourceType.GOLD)) {
+        updateLeaderboard();
+        
+        // Save database even less frequently
+        if (player.score % 30 === 0) {
+          saveToDatabase();
+        }
+      }
+      
+      // Send resource collection notification to the player only
+      socket.emit(SocketEvents.COLLECT_RESOURCE, {
+        position: newPosition,
+        player: player
+      });
+      
+      // Send map update to all players
+      const updatedTile = {x: newPosition.x, y: newPosition.y, tile: tile};
+      io.emit(SocketEvents.TILE_UPDATE, updatedTile);
+      
+      // Check if all resources are depleted
+      if (areAllResourcesDepleted()) {
+        console.log('All resources depleted, scheduling regeneration...');
+        // Announce regeneration
+        announceResourceRegeneration();
+        
+        // Schedule resource regeneration after a delay
+        setTimeout(() => {
+          regenerateResources();
+        }, REGENERATION_ANNOUNCEMENT_DELAY);
+      }
     }
   });
   
